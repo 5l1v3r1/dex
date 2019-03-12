@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option java_package = "ex.grpc";
+
+package order;
+
+// Defines the service
+service OrderReceive {
+    // Function invoked to send the request
+    rpc sendRequest (OrderRequest) returns (OrderReply) {}
+}
+
+// The request message containing requested numbers
+message OrderRequest {
+    int32 quantity = 1;
+    double price = 2;
+    bool type = 3; // Buy (0) or Sell (1)
+    string inst = 4;
+}
+
+// The response message containing response
+message OrderReply {
+    string result = 1;
+}
