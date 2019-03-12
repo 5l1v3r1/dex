@@ -16,9 +16,11 @@ message OrderRequest {
     double price = 2;
     bool type = 3; // Buy (0) or Sell (1)
     string inst = 4;
+    string user = 5; // for auth
+    string pass = 6; // for auth
 }
 
 // The response message containing response
 message OrderReply {
-    string result = 1;
+    int32 result = 1;
 }

@@ -28,15 +28,21 @@ class OrderServiceImplementation final : public OrderReceive::Service {
         bool type = request->type();
         // requesting instrument
         std::string inst = request->inst();
+        // requesting user
+        std::string user = request->user();
+        // requesting pass
+        std::string pass = request->pass();
         // Show orders
         std::cout << "Order consists of "
                   << "quantity " << quantity
                   << " price " << price
                   << " type " << type
                   << " instrument " << inst
+                  << " username " << user
+                  << " password " << pass
                   << std::endl;
 
-        std::string result ("Received");
+        int result = 0;
         
         // send result back to client
         reply->set_result(result);
