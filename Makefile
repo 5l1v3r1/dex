@@ -1,7 +1,7 @@
 CXX = c++
 CPPFLAGS += `pkg-config --cflags protobuf grpc`
 CXXFLAGS += -std=c++11
-LDFLAGS = -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
+LDFLAGS = -L/usr/local/lib -ltacopie `pkg-config --libs protobuf grpc++ cpp_redis`\
            -Wl,-lgrpc++_reflection -Wl,\
            -ldl
 

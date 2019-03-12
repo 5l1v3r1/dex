@@ -1,4 +1,12 @@
 #include <string>
+#include <iomanip>
+#include <ostream>
+#include <iostream>
+#include <sstream>
+#include <chrono>
+#include <ctime>
+
+#include <cpp_redis/cpp_redis>
 
 #include <grpcpp/grpcpp.h>
 #include "order.grpc.pb.h"
@@ -19,7 +27,22 @@ class OrderServiceImplementation final : public OrderReceive::Service {
         const OrderRequest* request, 
         OrderReply* reply
     ) override {
+        //! Enable logging
+        cpp_redis::active_logger = std::unique_ptr<cpp_redis::logger>(new cpp_redis::logger);
+        cpp_redis::client client;
+        client.connect("127.0.0.1", 6379, [](const std::string& host, std::size_t port, cpp_redis::connect_state status) {
+            if (status == cpp_redis::connect_state::dropped) {
+                std::cout << "client disconnected from " << host << ":" << port << std::endl;
+                }
+        });
+
         // Example computation on server
+        // timestamp received order
+        auto now = std::chrono::system_clock::now();
+        auto itt = std::chrono::system_clock::to_time_t(now);
+        std::ostringstream ss;
+        ss << std::put_time(gmtime(&itt), "%FT%TZ");
+        
         // requesting value of quantity
         int quantity = request->quantity();
         // requesting value of price
@@ -32,8 +55,15 @@ class OrderServiceImplementation final : public OrderReceive::Service {
         std::string user = request->user();
         // requesting pass
         std::string pass = request->pass();
+        
+        // create json from values obtained
+
+        // Dump values to Redis
+        client.set(ss.str(), std::to_string(price), [](cpp_redis::reply& reply) {});
+        
         // Show orders
-        std::cout << "Order consists of "
+        std::cout << ss.str()
+                  << " timed. Order consists of "
                   << "quantity " << quantity
                   << " price " << price
                   << " type " << type
