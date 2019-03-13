@@ -10,3 +10,6 @@
 [submodule "third_party/libzmq"]
 	path = third_party/libzmq
 	url = git@github.com:zeromq/libzmq.git
+[submodule "third_party/PicoSHA2"]
+	path = third_party/PicoSHA2
+	url = git@github.com:okdshin/PicoSHA2.git

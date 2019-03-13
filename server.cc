@@ -5,8 +5,8 @@
 #include <sstream>
 #include <chrono>
 #include <ctime>
-
 #include <cpp_redis/cpp_redis>
+#include <zmq.hpp>
 
 #include <grpcpp/grpcpp.h>
 #include "order.grpc.pb.h"
@@ -36,6 +36,12 @@ class OrderServiceImplementation final : public OrderReceive::Service {
                 }
         });
 
+        // Zeromq sockets
+        zmq::context_t zmq_context(1);
+        zmq::socket_t zmq_publisher (zmq_context, ZMQ_PUB);
+        const char * protocol = "tcp://localhost:5555";
+        zmq_publisher.connect(protocol);
+
         // Example computation on server
         // timestamp received order
         auto now = std::chrono::system_clock::now();
@@ -56,21 +62,43 @@ class OrderServiceImplementation final : public OrderReceive::Service {
         // requesting pass
         std::string pass = request->pass();
         
-        // create json from values obtained
-
-        // Dump values to Redis
-        client.set(ss.str(), std::to_string(price), [](cpp_redis::reply& reply) {});
+        // Check user and password for authentication
+        // database 0 in Redis is used for authentication
+        std::string fix_message = std::to_string(quantity)
+                                  + " "
+                                  + std::to_string(price)
+                                  + " "
+                                  + std::to_string(type)
+                                  + " "
+                                  + inst
+                                  + " "
+                                  + user
+                                  + " "
+                                  + pass;                          
+        std::cout << fix_message << std::endl;
+        
+        // database 1 is used for orders JSON dumps
+        
+        // Insert orders into Zeromq queue
+        zmq::message_t zmq_request (sizeof(fix_message));
+        std::memcpy(zmq_request.data (), fix_message.c_str(), sizeof(fix_message));
+        zmq_publisher.send(zmq_request);
+        
+        
+        // Dump values to Redis on database 1
+        // We could dumpt the orders into FIX messages strings
+        client.set(ss.str(), fix_message, [](cpp_redis::reply& reply) {});
         
         // Show orders
-        std::cout << ss.str()
-                  << " timed. Order consists of "
-                  << "quantity " << quantity
-                  << " price " << price
-                  << " type " << type
-                  << " instrument " << inst
-                  << " username " << user
-                  << " password " << pass
-                  << std::endl;
+        //std::cout << ss.str()
+                  //<< " timed. Order consists of "
+                  //<< "quantity " << quantity
+                  //<< " price " << price
+                  //<< " type " << type
+                  //<< " instrument " << inst
+                  //<< " username " << user
+                  //<< " password " << pass
+                  //<< std::endl; 
 
         int result = 0;
         

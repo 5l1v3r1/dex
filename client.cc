@@ -1,4 +1,7 @@
 #include <string>
+#include <functional>
+#include <iostream>
+#include <picosha2.h>
 
 #include <grpcpp/grpcpp.h>
 #include "order.grpc.pb.h"
@@ -18,13 +21,16 @@ class OrderClient {
     int sendRequest(int quantity, double price, bool type, std::string inst,
                     std::string user, std::string pass) {
         OrderRequest request;
+        
+        std::string hash_hex_pass;
+        picosha2::hash256_hex_string(pass, hash_hex_pass);
 
         request.set_quantity(quantity);
         request.set_price(price);
         request.set_type(type);
         request.set_inst(inst);
         request.set_user(user);
-        request.set_pass(pass);
+        request.set_pass(hash_hex_pass);
 
         OrderReply reply;
 
