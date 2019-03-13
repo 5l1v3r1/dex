@@ -1,6 +1,9 @@
 #include <string>
 #include <functional>
 #include <iostream>
+#include <sstream>
+#include <cstdlib>
+
 #include <picosha2.h>
 
 #include <grpcpp/grpcpp.h>
@@ -50,7 +53,8 @@ class OrderClient {
         std::unique_ptr<OrderReceive::Stub> stub_;
 };
 
-void Run() {
+void Run(std::string user, std::string pass,
+         std::string inst, bool type, int quantity, double price) {
     std::string address("0.0.0.0:5000");
     OrderClient client(
         grpc::CreateChannel(
@@ -61,19 +65,39 @@ void Run() {
 
     int response;
 
-    int quantity = 5;
-    double price = 10.0;
-    bool type = 1; // sell order
-    std::string inst ("BTC_DER");
-    std::string user ("dendisuhubdy");
-    std::string pass ("password");
+    //int quantity = 5;
+    //double price = 10.0;
+    //bool type = 1; // sell order
+    //std::string inst ("BTC_DER");
+    //std::string user ("dendisuhubdy");
+    //std::string pass ("password");
 
     response = client.sendRequest(quantity, price, type, inst, user, pass);
     std::cout << "Answer received: " << response << std::endl;
 }
 
 int main(int argc, char* argv[]){
-    Run();
-
+    if (argc <= 6) {
+        std::cout << "Usage: " << argv[0]
+                  << " <username> "
+                  << " <password> "
+                  << " <inst> "
+                  << " <type> "
+                  << " <quantity> "
+                  << " <price>"
+                  << std::endl;
+        return -1;
+    }
+    else {
+        std::string user (argv[1]);
+        std::string pass (argv[2]);
+        std::string inst (argv[3]);
+        std::string arg_type (argv[4]);
+        bool type;
+        std::istringstream(arg_type) >> std::boolalpha >> type;
+        int quantity = std::atoi(argv[5]);
+        double price = std::atof(argv[6]);
+        Run(user, pass, inst, type, quantity, price);
+    }
     return 0;
 }
