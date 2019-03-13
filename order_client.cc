@@ -24,7 +24,7 @@ class OrderClient {
         
         std::string hash_hex_pass;
         picosha2::hash256_hex_string(pass, hash_hex_pass);
-
+        //std::cout << hash_hex_pass << std::endl;
         request.set_quantity(quantity);
         request.set_price(price);
         request.set_type(type);
