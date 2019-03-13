@@ -23,31 +23,27 @@ using order::OrderRequest;
 using order::OrderReply;
 
 
-class OrderServiceImplementation final : public OrderReceive::Service {
+class OrderServiceImplementation final: public OrderReceive::Service { 
     Status sendRequest(
         ServerContext* context, 
         const OrderRequest* request, 
         OrderReply* reply
     ) override {
         //! Enable logging
+        // CPP redis database
         cpp_redis::active_logger = std::unique_ptr<cpp_redis::logger>(new cpp_redis::logger);
-        
         cpp_redis::client client;
-        
+        // Zeromq sockets
+        //zmq::context_t zmq_context(1);
+        //zmq::socket_t zmq_publisher (zmq_context, ZMQ_PUB);
+
         client.connect("127.0.0.1", 6379, [](const std::string& host, std::size_t port, cpp_redis::connect_state status) {
             if (status == cpp_redis::connect_state::dropped) {
                 std::cout << "client disconnected from " << host << ":" << port << std::endl;
                 }
         });
-
-        // Zeromq sockets
-        zmq::context_t zmq_context(1);
-        
-        zmq::socket_t zmq_publisher (zmq_context, ZMQ_PUB);
-        
-        const char * protocol = "tcp://*:5555";
-        
-        zmq_publisher.bind(protocol);
+        //const char * protocol = "tcp://*:5555";
+        //zmq_publisher.bind(protocol);
 
         // Example computation on server
         // timestamp received order
@@ -101,8 +97,8 @@ class OrderServiceImplementation final : public OrderReceive::Service {
             //zmq::message_t zmq_request (sizeof(fix_message));
             //std::memcpy(zmq_request.data (), fix_message.c_str(), sizeof(fix_message));
             //zmq_publisher.send(zmq_request);            
-            s_sendmore (zmq_publisher, inst);
-            s_send (zmq_publisher, fix_message);       
+            //s_sendmore (zmq_publisher, inst);
+            //s_send (zmq_publisher, fix_message);       
             // Dump values to Redis on database 1
             // We could dumpt the orders into FIX messages strings
             // client.set(ss.str(), fix_message, [](cpp_redis::reply& reply) {});
