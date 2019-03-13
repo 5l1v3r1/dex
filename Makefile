@@ -9,12 +9,15 @@ LDFLAGS = -L/usr/local/lib -ltacopie -lzmq `pkg-config --libs protobuf grpc++ cp
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 
-all: client server
+all: order_client order_server exchange_server
 
-client: order.pb.o order.grpc.pb.o client.o
+exchange_server: exchange_server.o 
+	$(CXX) exchange_server.cc $(CXXFLAGS) -o exchange_server
+
+order_client: order.pb.o order.grpc.pb.o order_client.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-server: order.pb.o order.grpc.pb.o server.o
+order_server: order.pb.o order.grpc.pb.o order_server.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto
@@ -24,4 +27,4 @@ server: order.pb.o order.grpc.pb.o server.o
 	protoc --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h client server
+	rm -f *.o *.pb.cc *.pb.h order_client order_server exchange_server
