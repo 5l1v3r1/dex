@@ -8,6 +8,8 @@
 #include <cpp_redis/cpp_redis>
 #include <zmq.hpp>
 
+#include "zhelpers.hpp"
+
 #include <grpcpp/grpcpp.h>
 #include "order.grpc.pb.h"
 
@@ -43,9 +45,9 @@ class OrderServiceImplementation final : public OrderReceive::Service {
         
         zmq::socket_t zmq_publisher (zmq_context, ZMQ_PUB);
         
-        const char * protocol = "tcp://localhost:5555";
+        const char * protocol = "tcp://*:5555";
         
-        zmq_publisher.connect(protocol);
+        zmq_publisher.bind(protocol);
 
         // Example computation on server
         // timestamp received order
@@ -96,15 +98,15 @@ class OrderServiceImplementation final : public OrderReceive::Service {
             // database 1 is used for orders JSON dumps
             
             // Insert orders into Zeromq queue
-            zmq::message_t zmq_request (sizeof(fix_message));
-            std::memcpy(zmq_request.data (), fix_message.c_str(), sizeof(fix_message));
-            zmq_publisher.send(zmq_request);
-            
-            
+            //zmq::message_t zmq_request (sizeof(fix_message));
+            //std::memcpy(zmq_request.data (), fix_message.c_str(), sizeof(fix_message));
+            //zmq_publisher.send(zmq_request);            
+            s_sendmore (zmq_publisher, inst);
+            s_send (zmq_publisher, fix_message);       
             // Dump values to Redis on database 1
             // We could dumpt the orders into FIX messages strings
             // client.set(ss.str(), fix_message, [](cpp_redis::reply& reply) {});
-            client.sync_commit();
+            //client.sync_commit();
 
             // Show orders
             std::cout << ss.str()

@@ -12,7 +12,7 @@ GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 all: order_client order_server exchange_server
 
 exchange_server: exchange_server.o 
-	$(CXX) exchange_server.cc $(CXXFLAGS) -o exchange_server
+	$(CXX) exchange_server.cc $(CXXFLAGS) -lzmq -o exchange_server
 
 order_client: order.pb.o order.grpc.pb.o order_client.o
 	$(CXX) $^ $(LDFLAGS) -o $@
