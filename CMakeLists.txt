@@ -31,12 +31,12 @@ pkg_check_modules(CPP_REDIS REQUIRED cpp_redis)
 set(ADDITIONAL_LINKER_FLAGS "-ltacopie")
 
 # Building order server
-add_executable(order_server
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/order_server.cpp
+add_executable(order_sync_server
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/order_sync_server.cpp
     ${PROTO_SRCS}
     ${GRPC_SRCS}
 )
-target_link_libraries(order_server
+target_link_libraries(order_sync_server
     gRPC::grpc++_reflection
     protobuf::libprotobuf
     ${CPP_REDIS_LIBRARIES}
@@ -44,12 +44,36 @@ target_link_libraries(order_server
 )
 
 # Building order client
-add_executable(order_client
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/order_client.cpp
+add_executable(order_sync_client
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/order_sync_client.cpp
     ${PROTO_SRCS}
     ${GRPC_SRCS}
 )
-target_link_libraries(order_client
+target_link_libraries(order_sync_client
+    gRPC::grpc++_reflection
+    protobuf::libprotobuf
+)
+
+# Building order server
+add_executable(order_async_server
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/order_async_server.cpp
+    ${PROTO_SRCS}
+    ${GRPC_SRCS}
+)
+target_link_libraries(order_async_server
+    gRPC::grpc++_reflection
+    protobuf::libprotobuf
+    ${CPP_REDIS_LIBRARIES}
+    ${ADDITIONAL_LINKER_FLAGS}
+)
+
+# Building order client
+add_executable(order_async_client
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/order_async_client.cpp
+    ${PROTO_SRCS}
+    ${GRPC_SRCS}
+)
+target_link_libraries(order_async_client
     gRPC::grpc++_reflection
     protobuf::libprotobuf
 )
