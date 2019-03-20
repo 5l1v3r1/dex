@@ -4,7 +4,8 @@ This is the repo consisting the bitcoin spot and derivative exchange with the te
 
 # Authors
 
-@dendisuhubdy
+* [@dendisuhubdy](https://github.com/dendisuhubdy)
 
 # Copyright
-PT Bitwyre Exchange, All rights reserved
+
+* PT Bitwyre Exchange, All rights reserved
