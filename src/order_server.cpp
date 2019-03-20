@@ -30,8 +30,8 @@ class OrderServiceImplementation final: public OrderReceive::Service {
         OrderReply* reply
     ) override {
         //! Enable logging
-        // CPP redis database
         cpp_redis::active_logger = std::unique_ptr<cpp_redis::logger>(new cpp_redis::logger);
+        // CPP redis database
         cpp_redis::client client;
         // Zeromq sockets
         //zmq::context_t zmq_context(1);
