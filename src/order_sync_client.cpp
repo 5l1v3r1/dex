@@ -21,7 +21,7 @@ class OrderClient {
     public:
         OrderClient(std::shared_ptr<Channel> channel) : stub_(OrderReceive::NewStub(channel)) {}
 
-    int sendRequest(int quantity, double price, bool type, std::string inst,
+    int SendOrder(int quantity, double price, bool type, std::string inst,
                     std::string user, std::string pass) {
         OrderRequest request;
         
@@ -39,10 +39,10 @@ class OrderClient {
 
         ClientContext context;
 
-        Status status = stub_->sendRequest(&context, request, &reply);
+        Status status = stub_->SendOrder(&context, request, &reply);
 
         if(status.ok()){
-            return reply.result();
+            return 0;
         } else {
             std::cout << status.error_code() << ": " << status.error_message() << std::endl;
             return -1;
@@ -72,7 +72,7 @@ void Run(std::string user, std::string pass,
     //std::string user ("dendisuhubdy");
     //std::string pass ("password");
 
-    response = client.sendRequest(quantity, price, type, inst, user, pass);
+    response = client.SendOrder(quantity, price, type, inst, user, pass);
     std::cout << "Answer received: " << response << std::endl;
 }
 

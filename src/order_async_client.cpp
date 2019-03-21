@@ -30,7 +30,8 @@ class OrderClient {
             : stub_(OrderReceive::NewStub(channel)) {}
 
     // Assembles the client's payload and sends it to the server.
-    void SendOrder(const std::string& user) {
+    void SendOrder(int quantity, double price, bool type, std::string inst,
+                   std::string user, std::string pass) {
         // Data we are sending to the server.
         OrderRequest request;
         
@@ -124,11 +125,11 @@ int main(int argc, char** argv) {
     // are created. This channel models a connection to an endpoint (in this case,
     // localhost at port 50051). We indicate that the channel isn't authenticated
     // (use of InsecureChannelCredentials()).
-    OrderClient greeter(grpc::CreateChannel(
+    OrderClient client(grpc::CreateChannel(
             "localhost:50051", grpc::InsecureChannelCredentials()));
 
     // Spawn reader thread that loops indefinitely
-    std::thread thread_ = std::thread(&OrderClient::AsyncCompleteRpc, &greeter);
+    std::thread thread_ = std::thread(&OrderClient::AsyncCompleteRpc, &client);
     
     if (argc <= 6) {
         std::cout << "Usage: " << argv[0]
@@ -152,7 +153,8 @@ int main(int argc, char** argv) {
         double price = std::atof(argv[6]);
         for (int i = 0; i < 100; i++) {
             std::string user("world " + std::to_string(i));
-            greeter.SendOrder(user, pass, inst, type, quantity, price);  // The actual RPC call!
+            client.SendOrder(quantity, price, type, inst, user, pass);  
+            // The actual RPC call!
         }
 
         std::cout << "Press control-c to quit" << std::endl << std::endl;

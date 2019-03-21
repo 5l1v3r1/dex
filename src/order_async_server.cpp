@@ -1,7 +1,14 @@
 #include <memory>
-#include <iostream>
-#include <string>
 #include <thread>
+#include <string>
+#include <iomanip>
+#include <ostream>
+#include <iostream>
+#include <sstream>
+#include <chrono>
+#include <ctime>
+#include <cpp_redis/cpp_redis>
+#include <zmq.hpp>
 
 #include <grpcpp/grpcpp.h>
 #include <grpc/support/log.h>
@@ -56,7 +63,7 @@ class ServerImpl final {
     // Take in the "service" instance (in this case representing an asynchronous
     // server) and the completion queue "cq" used for asynchronous communication
     // with the gRPC runtime.
-    CallData(Greeter::AsyncService* service, ServerCompletionQueue* cq)
+    CallData(OrderReceive::AsyncService* service, ServerCompletionQueue* cq)
         : service_(service), cq_(cq), responder_(&ctx_), status_(CREATE) {
       // Invoke the serving logic right away.
       Proceed();
@@ -66,14 +73,17 @@ class ServerImpl final {
       if (status_ == CREATE) {
         // Make this instance progress to the PROCESS state.
         status_ = PROCESS;
+        //! Enable logging
+        cpp_redis::active_logger = std::unique_ptr<cpp_redis::logger>(new cpp_redis::logger);
+        // CPP redis database
         client.connect("127.0.0.1", 6379, [](const std::string& host, std::size_t port, cpp_redis::connect_state status) {
             if (status == cpp_redis::connect_state::dropped) {
                 std::cout << "client disconnected from " << host << ":" << port << std::endl;
                 }
         });
 
-        const char * zmq_protocol = "tcp://*:5555";
-        zmq_publisher.bind(zmq_protocol);
+        //const char * zmq_protocol = "tcp://*:5555";
+        //zmq_publisher.bind(zmq_protocol);
 
         // As part of the initial CREATE state, we *request* that the system
         // start processing SendOrder requests. In this request, "this" acts are
@@ -180,7 +190,7 @@ class ServerImpl final {
    private:
     // The means of communication with the gRPC runtime for an asynchronous
     // server.
-    Greeter::AsyncService* service_;
+    OrderReceive::AsyncService* service_;
     // The producer-consumer queue where for asynchronous server notifications.
     ServerCompletionQueue* cq_;
     // Context for the rpc, allowing to tweak aspects of it such as the use
@@ -192,14 +202,13 @@ class ServerImpl final {
     OrderRequest request_;
     // What we send back to the client.
     OrderReply reply_;
-
-    //! Enable logging
-    cpp_redis::active_logger = std::unique_ptr<cpp_redis::logger>(new cpp_redis::logger);
-    // CPP redis database
+    
+    // client
     cpp_redis::client client;
+
     // Zeromq sockets
-    zmq::context_t zmq_context(1);
-    zmq::socket_t zmq_publisher (zmq_context, ZMQ_PUB);
+    //zmq::context_t zmq_context(1);
+    //zmq::socket_t zmq_publisher (zmq_context, ZMQ_PUB);
     
     // The means to get back to the client.
     ServerAsyncResponseWriter<OrderReply> responder_;
@@ -228,7 +237,7 @@ class ServerImpl final {
   }
 
   std::unique_ptr<ServerCompletionQueue> cq_;
-  Greeter::AsyncService service_;
+  OrderReceive::AsyncService service_;
   std::unique_ptr<Server> server_;
 };
 

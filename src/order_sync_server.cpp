@@ -24,7 +24,7 @@ using order::OrderReply;
 
 
 class OrderServiceImplementation final: public OrderReceive::Service { 
-    Status sendRequest(
+    Status SendOrder(
         ServerContext* context, 
         const OrderRequest* request, 
         OrderReply* reply
@@ -115,17 +115,17 @@ class OrderServiceImplementation final: public OrderReceive::Service {
                       << " password " << pass
                       << std::endl; 
 
-            int result = 0;
+            std::string message{"0"};
             
             // send result back to client
-            reply->set_result(result);
+            reply->set_message(message);
             // return an OK status
             return Status::OK;
         }
         else {
-            int result = -1;
-            // send result back to client
-            reply->set_result(result);
+            std::string message{"-1"};
+            // send message back to client
+            reply->set_message(message);
             return Status::OK;
         }
 

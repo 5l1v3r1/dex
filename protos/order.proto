@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-option java_package = "ex.grpc";
-
 option java_multiple_files = true;
 option java_package = "io.bitwyre.order";
 option java_outer_classname = "OrderdProto";
