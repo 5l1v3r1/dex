@@ -1,6 +1,11 @@
-#include <iostream>
 #include <memory>
 #include <string>
+#include <functional>
+#include <iostream>
+#include <sstream>
+#include <cstdlib>
+
+#include <picosha2.h>
 
 #include <grpcpp/grpcpp.h>
 #include <grpc/support/log.h>
@@ -19,16 +24,26 @@ using order::OrderRequest;
 using order::OrderReply;
 
 
-class GreeterClient {
+class OrderClient {
   public:
-    explicit GreeterClient(std::shared_ptr<Channel> channel)
-            : stub_(Greeter::NewStub(channel)) {}
+    explicit OrderClient(std::shared_ptr<Channel> channel)
+            : stub_(OrderReceive::NewStub(channel)) {}
 
     // Assembles the client's payload and sends it to the server.
     void SendOrder(const std::string& user) {
         // Data we are sending to the server.
-        HelloRequest request;
-        request.set_name(user);
+        OrderRequest request;
+        
+        std::string hash_hex_pass;
+        picosha2::hash256_hex_string(pass, hash_hex_pass);
+        //std::cout << hash_hex_pass << std::endl;
+        request.set_quantity(quantity);
+        request.set_price(price);
+        request.set_type(type);
+        request.set_inst(inst);
+        request.set_user(user);
+        request.set_pass(hash_hex_pass);
+
 
         // Call object to store rpc data
         AsyncClientCall* call = new AsyncClientCall;
@@ -38,7 +53,7 @@ class GreeterClient {
         // Because we are using the asynchronous API, we need to hold on to
         // the "call" instance in order to get updates on the ongoing RPC.
         call->response_reader =
-            stub_->PrepareAsyncSayHello(&call->context, request, &cq_);
+            stub_->PrepareAsyncSendOrder(&call->context, request, &cq_);
 
         // StartCall initiates the RPC call
         call->response_reader->StartCall();
@@ -66,7 +81,7 @@ class GreeterClient {
             GPR_ASSERT(ok);
 
             if (call->status.ok())
-                std::cout << "Greeter received: " << call->reply.message() << std::endl;
+                std::cout << "Order received: " << call->reply.message() << std::endl;
             else
                 std::cout << "RPC failed" << std::endl;
 
@@ -80,7 +95,7 @@ class GreeterClient {
     // struct for keeping state and data information
     struct AsyncClientCall {
         // Container for the data we expect from the server.
-        HelloReply reply;
+        OrderReply reply;
 
         // Context for the client. It could be used to convey extra information to
         // the server and/or tweak certain RPC behaviors.
@@ -90,12 +105,12 @@ class GreeterClient {
         Status status;
 
 
-        std::unique_ptr<ClientAsyncResponseReader<HelloReply>> response_reader;
+        std::unique_ptr<ClientAsyncResponseReader<OrderReply>> response_reader;
     };
 
     // Out of the passed in Channel comes the stub, stored here, our view of the
     // server's exposed services.
-    std::unique_ptr<Greeter::Stub> stub_;
+    std::unique_ptr<OrderReceive::Stub> stub_;
 
     // The producer-consumer queue we use to communicate asynchronously with the
     // gRPC runtime.
@@ -109,19 +124,41 @@ int main(int argc, char** argv) {
     // are created. This channel models a connection to an endpoint (in this case,
     // localhost at port 50051). We indicate that the channel isn't authenticated
     // (use of InsecureChannelCredentials()).
-    GreeterClient greeter(grpc::CreateChannel(
+    OrderClient greeter(grpc::CreateChannel(
             "localhost:50051", grpc::InsecureChannelCredentials()));
 
     // Spawn reader thread that loops indefinitely
-    std::thread thread_ = std::thread(&GreeterClient::AsyncCompleteRpc, &greeter);
+    std::thread thread_ = std::thread(&OrderClient::AsyncCompleteRpc, &greeter);
+    
+    if (argc <= 6) {
+        std::cout << "Usage: " << argv[0]
+                  << " <username> "
+                  << " <password> "
+                  << " <inst> "
+                  << " <type> "
+                  << " <quantity> "
+                  << " <price>"
+                  << std::endl;
+        return -1;
+    }
+    else {
+        std::string user (argv[1]);
+        std::string pass (argv[2]);
+        std::string inst (argv[3]);
+        std::string arg_type (argv[4]);
+        bool type;
+        std::istringstream(arg_type) >> std::boolalpha >> type;
+        int quantity = std::atoi(argv[5]);
+        double price = std::atof(argv[6]);
+        for (int i = 0; i < 100; i++) {
+            std::string user("world " + std::to_string(i));
+            greeter.SendOrder(user, pass, inst, type, quantity, price);  // The actual RPC call!
+        }
 
-    for (int i = 0; i < 100; i++) {
-        std::string user("world " + std::to_string(i));
-        greeter.SayHello(user);  // The actual RPC call!
+        std::cout << "Press control-c to quit" << std::endl << std::endl;
+        thread_.join();  //blocks forever
     }
 
-    std::cout << "Press control-c to quit" << std::endl << std::endl;
-    thread_.join();  //blocks forever
 
     return 0;
 }
