@@ -1,6 +1,8 @@
 project(grpc-cmake-example)
 cmake_minimum_required(VERSION 3.2)
 
+set(CMAKE_BUILD_TYPE Release)
+
 add_compile_options(-std=c++14)
 
 include(FindPkgConfig)
@@ -14,6 +16,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(Protobuf REQUIRED)
 find_package(GRPC REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(Boost 1.54 COMPONENTS REQUIRED)
+
+include_directories( ${Boost_INCLUDE_DIR} )
 
 set(PROTOS
     ${CMAKE_CURRENT_SOURCE_DIR}/protos/order.proto
@@ -78,9 +83,8 @@ target_link_libraries(order_async_client
     protobuf::libprotobuf
 )
 
-# Building exchange server
-add_executable(exchange_server
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/exchange_server.cpp
-)
-target_link_libraries(exchange_server
-)
+set(TEST_SRCS src/order_book.cpp src/engine.cpp src/test.cpp)
+set(SCORE_SRCS src/order_book.cpp src/engine.cpp src/score.cpp)
+
+add_executable(test ${TEST_SRCS})
+add_executable(score ${SCORE_SRCS})
